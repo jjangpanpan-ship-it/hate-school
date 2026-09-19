@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>학생 관리 시스템</title>
+
+    <!-- 깃허브(브라우저) 환경에서 Firebase 기능을 실행하기 위한 필수 라이브러리 -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
@@ -10,15 +14,21 @@
     <input type="text" id="update-name" placeholder="학생 이름 입력">
     <button onclick="searchStudent()">학생 조회</button>
     <button onclick="updateInfo('late')">지각 변수 정정</button>
-    <button onclick="updateInfo('reset')">당일 출결 리셋</button>
+    <button onclick="buttonReset()">당일 출결 리셋</button>
     
     <div id="update-result"></div>
 
     <script>
-    // ※ 주의: 기존에 사용하시던 Firebase 연결/초기화 코드가 이 자리에 있어야 작동합니다.
-    // 예: const database = firebase.database();
+    // 📌 회원님의 실제 파이어베이스 주소를 연동해 두었습니다. 추가 수정 없이 그대로 쓰시면 됩니다!
+    const firebaseConfig = {
+        databaseURL: "https://firebaseio.com" 
+    };
+    
+    // 파이어베이스 초기화 및 데이터베이스 연결
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-    // 🔍 1. 학생 조회 함수 (꼬여있던 상단 코드를 독립된 함수로 정리)
+    // 🔍 1. 학생 조회 함수
     function searchStudent() {
         const targetName = document.getElementById('update-name').value.trim();
         const resultDiv = document.getElementById('update-result');
@@ -33,14 +43,14 @@
             let found = false;
 
             for (let id in data) {
-                if (data[id].이름 === targetName) {
+                if (data[id] && data[id].이름 === targetName) {
                     const s = data[id];
                     resultDiv.innerHTML = `📋 <b>[조회 성공] -> ${s.이름} (지문 방: ${id}번)</b><br>
-                    • 누적 총 출석일수: ${s.총_출석_수}회<br>
-                    • 누적 총 지각횟수: ${s.지각_변수}회<br>
-                    • 누적 총 하교횟수: ${s.하교_횟수}회<br>
-                    • 오늘 출석 상태: ${s.오늘상태} (시간: ${s.출석시간})<br>
-                    • 오늘 하교 여부: ${s.하교_여부}`;
+                    • 누적 총 출석일수: ${s.총_출석_수 || 0}회<br>
+                    • 누적 총 지각횟수: ${s.지각_변수 || 0}회<br>
+                    • 누적 총 하교횟수: ${s.하교_횟수 || 0}회<br>
+                    • 오늘 출석 상태: ${s.오늘상태 || '-'} (시간: ${s.출석시간 || '-'})<br>
+                    • 오늘 하교 여부: ${s.하교_여부 || '-'}`;
                     found = true;
                     break;
                 }
@@ -49,11 +59,13 @@
             if (!found) {
                 resultDiv.innerHTML = "❌ 에러: 데이터베이스 명단에 일치하는 이름이 없습니다.";
             }
+        }).catch((error) => {
+            console.error(error);
+            resultDiv.innerHTML = "❌ 에러: 데이터베이스 주소가 올바르지 않거나 연결에 실패했습니다. (보안 규칙을 확인하세요)";
         });
     }
 
-    // 🛠️ 2. [3단계 정정 버튼 함수]
-    // 팝업창(prompt) 인풋을 띄워 클라우드 변수 데이터를 강제 정정 수정
+    // 🛠️ 2. [3단계 정정 버튼 함수] (지각 변수 정정 및 리셋 통합 관리)
     function updateInfo(type) {
         const targetName = document.getElementById('update-name').value.trim();
         const resultDiv = document.getElementById('update-result');
@@ -70,7 +82,7 @@
             let targetData = null;
 
             for (let id in data) {
-                if (data[id].이름 === targetName) {
+                if (data[id] && data[id].이름 === targetName) {
                     targetKey = id;
                     targetData = data[id];
                     break;
@@ -82,34 +94,61 @@
                 return;
             }
 
-            // 지각 변수 정정 클릭 시 문법
+            // 지각 변수 정정 클릭 시
             if (type === 'late') {
                 const newLate = prompt(
                     "🔢 이 학생의 누적 지각 횟수를 숫자로 치세요:",
-                    targetData.지각_변수
+                    targetData.지각_변수 || 0
                 );
 
-                if (newLate !== null) {
+                if (newLate !== null && newLate !== "") {
                     database.ref('students/' + targetKey).update({
                         "지각_변수": parseInt(newLate)
+                    }).then(() => {
+                        resultDiv.innerHTML = `✅ 지각 변수 정정 완료: 현재 ${newLate}회로 변경됨`;
                     });
+                }
+            }
+        });
+    }
 
-                    resultDiv.innerHTML = `✅ 지각 변수 정정 완료: 현재 ${newLate}회로 변경됨`;
+    // 🛠️ 3. 당일 출결 상태 강제 초기화 리셋 함수
+    function buttonReset() {
+        const targetName = document.getElementById('update-name').value.trim();
+        const resultDiv = document.getElementById('update-result');
+
+        if (!targetName) {
+            alert("리셋하고 싶은 학생의 이름을 입력하세요!");
+            return;
+        }
+
+        database.ref('students').once('value').then((snapshot) => {
+            const data = snapshot.val();
+            let targetKey = null;
+            let targetData = null;
+
+            for (let id in data) {
+                if (data[id] && data[id].이름 === targetName) {
+                    targetKey = id;
+                    targetData = data[id];
+                    break;
                 }
             }
 
-            // 당일 출결 상태 강제 초기화 리셋 클릭 시 문법
-            else if (type === 'reset') {
-                if (confirm("⚠️ 진짜 이 학생의 오늘 하루 출결 변수 데이터를 미등교 상태로 초기 정정하시겠습니까?")) {
-                    database.ref('students/' + targetKey).update({
-                        "오늘상태": "❌ 미등교",
-                        "출석시간": "-",
-                        "하교_여부": "❌ 미하교",
-                        "하교_시간": "-"
-                    });
+            if (!targetKey) {
+                resultDiv.innerHTML = "❌ 에러: 일치하는 학생 수첩 칸이 명단에 없습니다.";
+                return;
+            }
 
+            if (confirm("⚠️ 진짜 이 학생의 오늘 하루 출결 변수 데이터를 미등교 상태로 초기 정정하시겠습니까?")) {
+                database.ref('students/' + targetKey).update({
+                    "오늘상태": "❌ 미등교",
+                    "출석시간": "-",
+                    "하교_여부": "❌ 미하교",
+                    "하교_시간": "-"
+                }).then(() => {
                     resultDiv.innerHTML = `✅ 데이터 정정 완료: [${targetData.이름}] 오늘 하루 데이터가 미등교 상태로 청소됨`;
-                }
+                });
             }
         });
     }
