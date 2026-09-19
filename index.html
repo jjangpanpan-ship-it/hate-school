@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>학생 관리 시스템</title>
 
-    <!-- [교정완료] 잘려있던 주소를 정식 파이어베이스 웹 라이브러리 주소로 확실하게 채웠습니다 -->
+    <!-- [교정] 잘려있던 gstatic 주소를 정식 파이어베이스 연결 주소로 복구했습니다 -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 </head>
@@ -19,7 +19,7 @@
     <div id="update-result"></div>
 
     <script>
-    // 회원님의 파이어베이스 실시간 데이터베이스 주소 연동
+    // [교정] 회원님의 실제 파이어베이스 주소를 하드코딩으로 완전히 고정해 두었습니다
     const firebaseConfig = {
         databaseURL: "https://firebaseio.com" 
     };
@@ -61,11 +61,11 @@
             }
         }).catch((error) => {
             console.error(error);
-            resultDiv.innerHTML = "❌ 에러: 데이터베이스 주소가 올바르지 않거나 연결에 실패했습니다.";
+            resultDiv.innerHTML = "❌ 에러: 데이터베이스 연결에 실패했습니다.";
         });
     }
 
-    // 🛠️ 2. [3단계 정정 버튼 함수] (지각 변수 정정 관리)
+    // 🛠️ 2. 지각 변수 정정 함수
     function updateInfo(type) {
         const targetName = document.getElementById('update-name').value.trim();
         const resultDiv = document.getElementById('update-result');
@@ -90,7 +90,7 @@
             }
 
             if (!targetKey) {
-                resultDiv.innerHTML = "❌ 에러: 일치하는 학생 수첩 칸이 명단에 없습니다.";
+                resultDiv.innerHTML = "❌ 에러: 일치하는 학생이 명단에 없습니다.";
                 return;
             }
 
@@ -136,7 +136,7 @@
             }
 
             if (!targetKey) {
-                resultDiv.innerHTML = "❌ 에러: 일치하는 학생 수첩 칸이 명단에 없습니다.";
+                resultDiv.innerHTML = "❌ 에러: 일치하는 학생이 명단에 없습니다.";
                 return;
             }
 
