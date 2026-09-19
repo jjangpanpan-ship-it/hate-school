@@ -1,4 +1,18 @@
-resultDiv.innerHTML = `📋 <b>[조회 성공] -> ${s.이름} (지문 방: ${id}번)</b><br>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>학생 관리 시스템</title>
+</head>
+<body>
+
+    <!-- 화면에 보여질 HTML 요소들이 들어갈 자리 (예시) -->
+    <input type="text" id="update-name" placeholder="학생 이름 입력">
+    <div id="update-result"></div>
+
+    <!-- 코드 실행을 위한 스크립트 태그 -->
+    <script>
+    resultDiv.innerHTML = `📋 <b>[조회 성공] -> ${s.이름} (지문 방: ${id}번)</b><br>
 • 누적 총 출석일수: ${s.총_출석_수}회<br>
 • 누적 총 지각횟수: ${s.지각_변수}회<br>
 • 누적 총 하교횟수: ${s.하교_횟수}회<br>
@@ -80,3 +94,8 @@ function updateInfo(type) {
         }
     });
 }
+
+    </script>
+
+</body>
+</html>
