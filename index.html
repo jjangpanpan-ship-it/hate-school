@@ -5,35 +5,354 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>학생 관리 시스템</title>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        body { font-family: sans-serif; max-width: 560px; margin: 24px auto; padding: 0 16px; }
-        .row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-        input { padding: 8px; font-size: 15px; }
-        #update-name { flex: 2; min-width: 140px; }
-        #update-id { flex: 1; min-width: 110px; }
-        button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --text: #1f2a44;
+            --muted: #7a859c;
+            --line: #e6eaf2;
+            --primary: #4f6ef7;
+            --primary-dark: #3a56d8;
+            --primary-soft: #eef1ff;
+            --danger: #e5484d;
+            --danger-soft: #fdecec;
+            --success: #1f9d63;
+            --success-soft: #e6f6ee;
+            --warn: #c27803;
+            --warn-soft: #fff6e0;
+            --shadow: 0 10px 30px rgba(31, 42, 68, .08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', -apple-system, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ───── 상단 네비게이션 ───── */
+        .navbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+        }
+        .navbar-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+        }
+        .brand-logo {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), #8a5cf6);
+            color: #fff;
+            display: grid; place-items: center;
+            font-size: 18px;
+        }
+        .nav-tag {
+            font-size: 13px;
+            color: var(--muted);
+            background: var(--bg);
+            padding: 6px 12px;
+            border-radius: 999px;
+        }
+
+        /* ───── 히어로 ───── */
+        .hero {
+            background: linear-gradient(135deg, #4f6ef7 0%, #7a5cf6 100%);
+            color: #fff;
+            padding: 48px 20px 90px;
+            text-align: center;
+        }
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(26px, 5vw, 36px);
+            letter-spacing: -0.8px;
+        }
+        .hero p {
+            margin: 0;
+            opacity: .85;
+            font-size: 15px;
+        }
+
+        /* ───── 메인 레이아웃 ───── */
+        .container {
+            max-width: 960px;
+            margin: -56px auto 40px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 800px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        .card h2 {
+            margin: 0 0 18px;
+            font-size: 17px;
+            letter-spacing: -0.3px;
+        }
+
+        /* ───── 폼 ───── */
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .hint {
+            font-weight: 400;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .field { margin-bottom: 16px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text);
+            border: 1.5px solid var(--line);
+            border-radius: 12px;
+            background: #fafbfe;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s, background .15s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px var(--primary-soft);
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: transform .1s, background .15s, box-shadow .15s, opacity .15s;
+        }
+        button:active:not(:disabled) { transform: translateY(1px); }
         button:disabled { opacity: .5; cursor: not-allowed; }
-        #update-result { margin-top: 16px; line-height: 1.7; }
-        .error { color: #c0392b; }
-        .success { color: #1e8449; }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            font-size: 15px;
+            padding: 14px;
+            box-shadow: 0 6px 16px rgba(79, 110, 247, .3);
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn-outline {
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+        }
+        .btn-outline:hover:not(:disabled) { background: #e1e7ff; }
+        .btn-danger {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+        .btn-danger:hover:not(:disabled) { background: #fbdada; }
+
+        /* ───── 결과 영역 ───── */
+        .placeholder {
+            text-align: center;
+            padding: 56px 16px;
+            color: var(--muted);
+        }
+        .placeholder .big { font-size: 44px; margin-bottom: 10px; }
+        .placeholder p { margin: 0; line-height: 1.6; font-size: 14px; }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 52px; height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary), #8a5cf6);
+            color: #fff;
+            font-size: 22px;
+            font-weight: 800;
+            display: grid; place-items: center;
+            flex-shrink: 0;
+        }
+        .profile-name { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+        .badge {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            background: var(--primary-soft);
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .stat {
+            background: var(--bg);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+        }
+        .stat .num { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        .stat .num small { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+        .stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+        .today-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 0 10px; }
+        .today-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .today-row .k { color: var(--muted); }
+        .today-row .v { font-weight: 600; text-align: right; }
+        .pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--success-soft);
+            color: var(--success);
+        }
+        .pill.off { background: var(--danger-soft); color: var(--danger); }
+        .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+
+        /* ───── 알림 박스 ───── */
+        .alert {
+            padding: 16px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .alert.error { background: var(--danger-soft); color: #b3262b; }
+        .alert.success { background: var(--success-soft); color: #167a4c; }
+        .alert.warn { background: var(--warn-soft); color: var(--warn); }
+
+        .pick-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+        .pick-list button {
+            width: 100%;
+            text-align: left;
+            background: #fff;
+            color: var(--text);
+            border: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pick-list button:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+
+        .loading { opacity: .6; pointer-events: none; }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding-bottom: 30px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="row">
-        <input type="text" id="update-name" placeholder="학생 이름 입력">
-        <input type="text" id="update-id" placeholder="지문 번호 (동명이인일 때만)">
-    </div>
-    <div class="row">
-        <button id="btn-search">학생 조회</button>
-        <button id="btn-late">지각 변수 정정</button>
-        <button id="btn-reset">당일 출결 리셋</button>
-    </div>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <div class="brand">
+                <div class="brand-logo">🎓</div>
+                학생 관리 시스템
+            </div>
+            <span class="nav-tag">출결 관리</span>
+        </div>
+    </nav>
 
-    <div id="update-result"></div>
+    <header class="hero">
+        <h1>학생 출결 관리</h1>
+        <p>이름으로 학생을 조회하고 지각 횟수와 오늘의 출결 상태를 관리하세요.</p>
+    </header>
+
+    <main class="container">
+
+        <!-- 왼쪽: 입력/버튼 -->
+        <section class="card">
+            <h2>학생 검색</h2>
+
+            <div class="field">
+                <label for="update-name">학생 이름</label>
+                <input type="text" id="update-name" placeholder="예) 홍길동" autocomplete="off">
+            </div>
+
+            <button class="btn-primary" id="btn-search">학생 조회</button>
+
+            <div class="btn-row">
+                <button class="btn-outline" id="btn-late">지각 변수 정정</button>
+                <button class="btn-danger" id="btn-reset">당일 출결 리셋</button>
+            </div>
+        </section>
+
+        <!-- 오른쪽: 결과 -->
+        <section class="card" id="result-card">
+            <h2>조회 결과</h2>
+            <div id="update-result">
+                <div class="placeholder">
+                    <div class="big">🔍</div>
+                    <p>학생 이름을 입력하고<br>조회 버튼을 눌러보세요.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>© 학생 관리 시스템</footer>
 
     <script>
     // ───────────── Firebase 연결 (기존 설정 그대로) ─────────────
@@ -45,8 +364,10 @@
 
     // ───────────── 공통 유틸 ─────────────
     const nameInput = document.getElementById('update-name');
-    const idInput = document.getElementById('update-id');
+    let selectedId = null;   // 동명이인 중 목록에서 고른 학생의 지문 번호 (DB 키, 1회용)
+    let lastAction = null;   // 마지막으로 누른 버튼 동작 (학생을 고른 뒤 이어서 실행)
     const resultDiv = document.getElementById('update-result');
+    const resultCard = document.getElementById('result-card');
     const buttons = document.querySelectorAll('button');
 
     // DB에서 가져온 값을 innerHTML에 넣어도 안전하도록 특수문자 이스케이프
@@ -56,14 +377,15 @@
         }[c]));
     }
 
+    // 알림 박스 표시 (type: error | success | warn)
     function showMessage(html, type) {
-        resultDiv.className = type || '';
-        resultDiv.innerHTML = html;
+        resultDiv.innerHTML = `<div class="alert ${type || ''}">${html}</div>`;
     }
 
     // 작업 중 버튼 잠금 (연타로 인한 중복 실행 방지)
     function setBusy(busy) {
         buttons.forEach((b) => { b.disabled = busy; });
+        resultCard.classList.toggle('loading', busy);
     }
 
     // 모든 버튼 동작을 감싸서 에러 처리와 버튼 잠금을 한 곳에서 처리
@@ -98,16 +420,12 @@
     // 입력값을 검증하고 대상 학생 1명을 확정해서 반환. 실패하면 null
     async function resolveTarget() {
         const name = nameInput.value.trim();
-        const id = idInput.value.trim();
+        const id = selectedId;
+        selectedId = null; // 한 번 쓰면 비움
 
         if (!name) {
             alert("학생의 이름을 입력하세요!");
             nameInput.focus();
-            return null;
-        }
-        // Firebase 키에 쓸 수 없는 문자(. $ # [ ] /)가 섞이는 것을 차단
-        if (id && !/^[A-Za-z0-9_-]+$/.test(id)) {
-            showMessage("❌ 에러: 지문 번호는 숫자/영문만 입력할 수 있습니다.", 'error');
             return null;
         }
 
@@ -118,32 +436,90 @@
             return null;
         }
         if (matches.length > 1) {
-            const list = matches.map((m) => `• ${esc(m.data.이름)} (지문 방: ${esc(m.id)}번)`).join('<br>');
-            showMessage(`⚠️ 같은 이름의 학생이 ${matches.length}명 있습니다. 위 입력칸에 지문 번호를 함께 입력하세요.<br>${list}`, 'error');
-            idInput.focus();
+            const items = matches.map((m) =>
+                `<li><button type="button" data-pick="${esc(m.id)}">
+                    <span>${esc(m.data.이름)}</span><span>지문 번호: ${esc(m.id)}</span>
+                </button></li>`
+            ).join('');
+            showMessage(
+                `⚠️ 같은 이름의 학생이 ${matches.length}명 있습니다. 아래에서 해당 학생을 선택하세요.
+                 <ul class="pick-list">${items}</ul>`,
+                'warn'
+            );
             return null;
         }
         return matches[0];
     }
 
+    // 동명이인 목록에서 학생을 클릭하면, 방금 누른 버튼 동작을 그 학생에게 이어서 실행
+    resultDiv.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pick]');
+        if (!btn) return;
+        selectedId = btn.dataset.pick;
+        (lastAction || searchStudent)();
+    });
+
+    // ───────────── 조회 결과 카드 그리기 ─────────────
+    function renderStudent(target) {
+        const s = target.data;
+        const attended = !String(s.오늘상태 || '').includes('미');
+        const leftSchool = !String(s.하교_여부 || '').includes('미') && s.하교_여부;
+
+        resultDiv.innerHTML = `
+            <div class="profile">
+                <div class="avatar">${esc(String(s.이름).charAt(0))}</div>
+                <div>
+                    <div class="profile-name">${esc(s.이름)}</div>
+                    <span class="badge">지문 번호: ${esc(target.id)}</span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="num">${esc(s.총_출석_수 || 0)}<small>회</small></div>
+                    <div class="label">누적 출석일수</div>
+                </div>
+                <div class="stat">
+                    <div class="num">${esc(s.지각_변수 || 0)}<small>회</small></div>
+                    <div class="label">누적 지각</div>
+                </div>
+                <div class="stat">
+                    <div class="num">${esc(s.하교_횟수 || 0)}<small>회</small></div>
+                    <div class="label">누적 하교</div>
+                </div>
+            </div>
+
+            <p class="today-title">오늘 현황</p>
+            <div class="today-row">
+                <span class="k">출석 상태</span>
+                <span class="v">
+                    <span class="pill ${attended ? '' : 'off'}">${esc(s.오늘상태 || '-')}</span>
+                    <span class="sub">시간: ${esc(s.출석시간 || '-')}</span>
+                </span>
+            </div>
+            <div class="today-row">
+                <span class="k">하교 여부</span>
+                <span class="v">
+                    <span class="pill ${leftSchool ? '' : 'off'}">${esc(s.하교_여부 || '-')}</span>
+                    <span class="sub">시간: ${esc(s.하교_시간 || '-')}</span>
+                </span>
+            </div>
+        `;
+    }
+
     // ───────────── 1. 학생 조회 ─────────────
     function searchStudent() {
+        lastAction = searchStudent;
         return run(async () => {
             const target = await resolveTarget();
             if (!target) return;
-
-            const s = target.data;
-            showMessage(`📋 <b>[조회 성공] -> ${esc(s.이름)} (지문 방: ${esc(target.id)}번)</b><br>
-                • 누적 총 출석일수: ${esc(s.총_출석_수 || 0)}회<br>
-                • 누적 총 지각횟수: ${esc(s.지각_변수 || 0)}회<br>
-                • 누적 총 하교횟수: ${esc(s.하교_횟수 || 0)}회<br>
-                • 오늘 출석 상태: ${esc(s.오늘상태 || '-')} (시간: ${esc(s.출석시간 || '-')})<br>
-                • 오늘 하교 여부: ${esc(s.하교_여부 || '-')}`);
+            renderStudent(target);
         });
     }
 
     // ───────────── 2. 지각 변수 정정 ─────────────
     function updateLate() {
+        lastAction = updateLate;
         return run(async () => {
             const target = await resolveTarget();
             if (!target) return;
@@ -169,6 +545,7 @@
 
     // ───────────── 3. 당일 출결 상태 리셋 ─────────────
     function buttonReset() {
+        lastAction = buttonReset;
         return run(async () => {
             const target = await resolveTarget();
             if (!target) return;
@@ -193,9 +570,7 @@
     document.getElementById('btn-reset').addEventListener('click', buttonReset);
 
     // 입력창에서 Enter를 누르면 조회
-    [nameInput, idInput].forEach((el) => {
-        el.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchStudent(); });
-    });
+    nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchStudent(); });
     </script>
 
 </body>
