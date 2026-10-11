@@ -438,7 +438,7 @@
         if (matches.length > 1) {
             const items = matches.map((m) =>
                 `<li><button type="button" data-pick="${esc(m.id)}">
-                    <span>${esc(m.data.이름)}</span><span>지문 번호: ${esc(m.id)}</span>
+                    <span>${esc(m.data.이름)}</span><span>지문 번호: ${esc(m.data.finger_id ?? '-')}</span>
                 </button></li>`
             ).join('');
             showMessage(
@@ -470,7 +470,7 @@
                 <div class="avatar">${esc(String(s.이름).charAt(0))}</div>
                 <div>
                     <div class="profile-name">${esc(s.이름)}</div>
-                    <span class="badge">지문 번호: ${esc(target.id)}</span>
+                    <span class="badge">지문 번호: ${esc(s.finger_id ?? '-')}</span>
                 </div>
             </div>
 
@@ -544,23 +544,72 @@
     }
 
     // ───────────── 3. 당일 출결 상태 리셋 ─────────────
+    // 오늘 기록을 지울 때 누적값에서 되돌려야 할 항목을 판별
+    // (출석 처리된 날 → 출석 -1 / 지각 처리된 날 → 지각 -1 / 하교 처리된 날 → 하교 -1)
+    function calcRollback(s) {
+        const status = String(s.오늘상태 || '');
+        const leave = String(s.하교_여부 || '');
+        return {
+            attended: status !== '' && status !== '-' && !status.includes('미'),
+            late: status.includes('지각'),
+            left: leave !== '' && leave !== '-' && !leave.includes('미')
+        };
+    }
+    const dec = (v) => Math.max(0, (Number(v) || 0) - 1); // 1 감소, 0 아래로는 내려가지 않음
+
     function buttonReset() {
         lastAction = buttonReset;
         return run(async () => {
             const target = await resolveTarget();
             if (!target) return;
 
-            if (!confirm(`⚠️ [${target.data.이름}] 학생의 오늘 출결 데이터를 미등교 상태로 초기화하시겠습니까?`)) {
+            // 확인창에 "무엇이 바뀌는지"를 미리 보여줌
+            const before = target.data;
+            const plan = calcRollback(before);
+            const changes = [];
+            if (plan.attended) changes.push(`• 누적 출석일수: ${before.총_출석_수 || 0}회 → ${dec(before.총_출석_수)}회`);
+            if (plan.late)     changes.push(`• 누적 지각횟수: ${before.지각_변수 || 0}회 → ${dec(before.지각_변수)}회`);
+            if (plan.left)     changes.push(`• 누적 하교횟수: ${before.하교_횟수 || 0}회 → ${dec(before.하교_횟수)}회`);
+
+            const ok = confirm(
+                `⚠️ [${before.이름}] 학생의 오늘 출결 기록을 초기화합니다.\n\n` +
+                (changes.length ? changes.join('\n') : '• 누적 기록은 변경되지 않습니다.') +
+                `\n\n진행하시겠습니까?`
+            );
+            if (!ok) return;
+
+            // 트랜잭션: 최신 데이터를 기준으로 오늘 기록 초기화와 누적값 되돌리기를 한 번에 처리
+            const done = { attended: false, late: false, left: false };
+            const result = await database.ref('students/' + target.id).transaction((s) => {
+                if (s === null) return s; // 로컬 캐시가 비어 있으면 서버 값으로 다시 실행됨
+                const rb = calcRollback(s);
+                done.attended = rb.attended; done.late = rb.late; done.left = rb.left;
+
+                if (rb.attended) s.총_출석_수 = dec(s.총_출석_수);
+                if (rb.late)     s.지각_변수 = dec(s.지각_변수);
+                if (rb.left)     s.하교_횟수 = dec(s.하교_횟수);
+
+                s.오늘상태 = "❌ 미등교";
+                s.출석시간 = "-";
+                s.하교_여부 = "❌ 미하교";
+                s.하교_시간 = "-";
+                return s;
+            });
+
+            if (!result.committed) {
+                showMessage("❌ 에러: 초기화가 반영되지 않았습니다. 다시 시도하세요.", 'error');
                 return;
             }
 
-            await database.ref('students/' + target.id).update({
-                "오늘상태": "❌ 미등교",
-                "출석시간": "-",
-                "하교_여부": "❌ 미하교",
-                "하교_시간": "-"
-            });
-            showMessage(`✅ 데이터 정정 완료: [${esc(target.data.이름)}] 오늘 하루 데이터가 미등교 상태로 초기화됨`, 'success');
+            const rolled = [];
+            if (done.attended) rolled.push('출석 -1');
+            if (done.late)     rolled.push('지각 -1');
+            if (done.left)     rolled.push('하교 -1');
+            showMessage(
+                `✅ 데이터 정정 완료: [${esc(before.이름)}] 오늘 기록이 미등교 상태로 초기화됨` +
+                (rolled.length ? `<br>누적 반영: ${rolled.join(', ')}` : '<br>누적 기록은 변경되지 않음'),
+                'success'
+            );
         });
     }
 
