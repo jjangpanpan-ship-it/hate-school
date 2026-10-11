@@ -2,156 +2,200 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>학생 관리 시스템</title>
 
-    <!-- [교정] 잘려있던 gstatic 주소를 정식 파이어베이스 연결 주소로 복구했습니다 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body { font-family: sans-serif; max-width: 560px; margin: 24px auto; padding: 0 16px; }
+        .row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        input { padding: 8px; font-size: 15px; }
+        #update-name { flex: 2; min-width: 140px; }
+        #update-id { flex: 1; min-width: 110px; }
+        button { padding: 8px 12px; font-size: 14px; cursor: pointer; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        #update-result { margin-top: 16px; line-height: 1.7; }
+        .error { color: #c0392b; }
+        .success { color: #1e8449; }
+    </style>
 </head>
 <body>
 
-    <!-- 화면에 보여질 입력창과 버튼들 -->
-    <input type="text" id="update-name" placeholder="학생 이름 입력">
-    <button onclick="searchStudent()">학생 조회</button>
-    <button onclick="updateInfo('late')">지각 변수 정정</button>
-    <button onclick="buttonReset()">당일 출결 리셋</button>
-    
+    <div class="row">
+        <input type="text" id="update-name" placeholder="학생 이름 입력">
+        <input type="text" id="update-id" placeholder="지문 번호 (동명이인일 때만)">
+    </div>
+    <div class="row">
+        <button id="btn-search">학생 조회</button>
+        <button id="btn-late">지각 변수 정정</button>
+        <button id="btn-reset">당일 출결 리셋</button>
+    </div>
+
     <div id="update-result"></div>
 
     <script>
-    // [교정] 회원님의 실제 파이어베이스 주소를 하드코딩으로 완전히 고정해 두었습니다
+    // ───────────── Firebase 연결 (기존 설정 그대로) ─────────────
     const firebaseConfig = {
-        databaseURL: "https://school-system-c8892-default-rtdb.firebaseio.com/" 
+        databaseURL: "https://school-system-c8892-default-rtdb.firebaseio.com/"
     };
-    
-    // 파이어베이스 초기화 및 데이터베이스 연결
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // 🔍 1. 학생 조회 함수
-    function searchStudent() {
-        const targetName = document.getElementById('update-name').value.trim();
-        const resultDiv = document.getElementById('update-result');
+    // ───────────── 공통 유틸 ─────────────
+    const nameInput = document.getElementById('update-name');
+    const idInput = document.getElementById('update-id');
+    const resultDiv = document.getElementById('update-result');
+    const buttons = document.querySelectorAll('button');
 
-        if (!targetName) {
-            alert("조회할 학생의 이름을 입력하세요!");
-            return;
-        }
+    // DB에서 가져온 값을 innerHTML에 넣어도 안전하도록 특수문자 이스케이프
+    function esc(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
 
-        database.ref('students').once('value').then((snapshot) => {
-            const data = snapshot.val();
-            let found = false;
+    function showMessage(html, type) {
+        resultDiv.className = type || '';
+        resultDiv.innerHTML = html;
+    }
 
-            for (let id in data) {
-                if (data[id] && data[id].이름 === targetName) {
-                    const s = data[id];
-                    resultDiv.innerHTML = `📋 <b>[조회 성공] -> ${s.이름} (지문 방: ${id}번)</b><br>
-                    • 누적 총 출석일수: ${s.총_출석_수 || 0}회<br>
-                    • 누적 총 지각횟수: ${s.지각_변수 || 0}회<br>
-                    • 누적 총 하교횟수: ${s.하교_횟수 || 0}회<br>
-                    • 오늘 출석 상태: ${s.오늘상태 || '-'} (시간: ${s.출석시간 || '-'})<br>
-                    • 오늘 하교 여부: ${s.하교_여부 || '-'}`;
-                    found = true;
-                    break;
-                }
-            }
+    // 작업 중 버튼 잠금 (연타로 인한 중복 실행 방지)
+    function setBusy(busy) {
+        buttons.forEach((b) => { b.disabled = busy; });
+    }
 
-            if (!found) {
-                resultDiv.innerHTML = "❌ 에러: 데이터베이스 명단에 일치하는 이름이 없습니다.";
-            }
-        }).catch((error) => {
+    // 모든 버튼 동작을 감싸서 에러 처리와 버튼 잠금을 한 곳에서 처리
+    async function run(task) {
+        setBusy(true);
+        try {
+            await task();
+        } catch (error) {
             console.error(error);
-            resultDiv.innerHTML = "❌ 에러: 데이터베이스 연결에 실패했습니다.";
-        });
+            showMessage("❌ 에러: 데이터베이스 작업에 실패했습니다. 잠시 후 다시 시도하세요.", 'error');
+        } finally {
+            setBusy(false);
+        }
     }
 
-    // 🛠️ 2. 지각 변수 정정 함수
-    function updateInfo(type) {
-        const targetName = document.getElementById('update-name').value.trim();
-        const resultDiv = document.getElementById('update-result');
+    // ───────────── 학생 찾기 (세 기능이 함께 사용) ─────────────
+    // 이름(+선택적으로 지문 번호)으로 일치하는 학생 목록을 반환
+    async function findStudents(name, id) {
+        if (id) {
+            // 지문 번호가 있으면 해당 방만 직접 읽음
+            const snap = await database.ref('students/' + id).once('value');
+            const data = snap.val();
+            return (data && data.이름 === name) ? [{ id, data }] : [];
+        }
+        // 이름으로 서버에서 바로 검색 (전체 다운로드 방지)
+        const snap = await database.ref('students').orderByChild('이름').equalTo(name).once('value');
+        const list = [];
+        snap.forEach((child) => { list.push({ id: child.key, data: child.val() }); });
+        return list;
+    }
 
-        if (!targetName) {
-            alert("정정하고 싶은 학생의 이름을 정확히 입력하세요!");
-            return;
+    // 입력값을 검증하고 대상 학생 1명을 확정해서 반환. 실패하면 null
+    async function resolveTarget() {
+        const name = nameInput.value.trim();
+        const id = idInput.value.trim();
+
+        if (!name) {
+            alert("학생의 이름을 입력하세요!");
+            nameInput.focus();
+            return null;
+        }
+        // Firebase 키에 쓸 수 없는 문자(. $ # [ ] /)가 섞이는 것을 차단
+        if (id && !/^[A-Za-z0-9_-]+$/.test(id)) {
+            showMessage("❌ 에러: 지문 번호는 숫자/영문만 입력할 수 있습니다.", 'error');
+            return null;
         }
 
-        database.ref('students').once('value').then((snapshot) => {
-            const data = snapshot.val();
+        const matches = await findStudents(name, id);
 
-            let targetKey = null;
-            let targetData = null;
+        if (matches.length === 0) {
+            showMessage("❌ 에러: 명단에 일치하는 학생이 없습니다.", 'error');
+            return null;
+        }
+        if (matches.length > 1) {
+            const list = matches.map((m) => `• ${esc(m.data.이름)} (지문 방: ${esc(m.id)}번)`).join('<br>');
+            showMessage(`⚠️ 같은 이름의 학생이 ${matches.length}명 있습니다. 위 입력칸에 지문 번호를 함께 입력하세요.<br>${list}`, 'error');
+            idInput.focus();
+            return null;
+        }
+        return matches[0];
+    }
 
-            for (let id in data) {
-                if (data[id] && data[id].이름 === targetName) {
-                    targetKey = id;
-                    targetData = data[id];
-                    break;
-                }
-            }
+    // ───────────── 1. 학생 조회 ─────────────
+    function searchStudent() {
+        return run(async () => {
+            const target = await resolveTarget();
+            if (!target) return;
 
-            if (!targetKey) {
-                resultDiv.innerHTML = "❌ 에러: 일치하는 학생이 명단에 없습니다.";
-                return;
-            }
-
-            // 지각 변수 정정 클릭 시
-            if (type === 'late') {
-                const newLate = prompt(
-                    "🔢 이 학생의 누적 지각 횟수를 숫자로 치세요:",
-                    targetData.지각_변수 || 0
-                );
-
-                if (newLate !== null && newLate !== "") {
-                    database.ref('students/' + targetKey).update({
-                        "지각_변수": parseInt(newLate)
-                    }).then(() => {
-                        resultDiv.innerHTML = `✅ 지각 변수 정정 완료: 현재 ${newLate}회로 변경됨`;
-                    });
-                }
-            }
+            const s = target.data;
+            showMessage(`📋 <b>[조회 성공] -> ${esc(s.이름)} (지문 방: ${esc(target.id)}번)</b><br>
+                • 누적 총 출석일수: ${esc(s.총_출석_수 || 0)}회<br>
+                • 누적 총 지각횟수: ${esc(s.지각_변수 || 0)}회<br>
+                • 누적 총 하교횟수: ${esc(s.하교_횟수 || 0)}회<br>
+                • 오늘 출석 상태: ${esc(s.오늘상태 || '-')} (시간: ${esc(s.출석시간 || '-')})<br>
+                • 오늘 하교 여부: ${esc(s.하교_여부 || '-')}`);
         });
     }
 
-    // 🛠️ 3. 당일 출결 상태 강제 초기화 리셋 함수
+    // ───────────── 2. 지각 변수 정정 ─────────────
+    function updateLate() {
+        return run(async () => {
+            const target = await resolveTarget();
+            if (!target) return;
+
+            const input = prompt(
+                `🔢 [${target.data.이름}] 학생의 누적 지각 횟수를 숫자로 입력하세요:`,
+                target.data.지각_변수 || 0
+            );
+            if (input === null) return; // 취소
+
+            const trimmed = input.trim();
+            // 0 이상의 정수만 허용 (빈 값, 문자, 음수, 소수 모두 차단)
+            if (!/^\d+$/.test(trimmed)) {
+                showMessage("❌ 에러: 0 이상의 정수만 입력할 수 있습니다.", 'error');
+                return;
+            }
+            const newLate = parseInt(trimmed, 10);
+
+            await database.ref('students/' + target.id).update({ "지각_변수": newLate });
+            showMessage(`✅ 지각 변수 정정 완료: [${esc(target.data.이름)}] 현재 ${newLate}회로 변경됨`, 'success');
+        });
+    }
+
+    // ───────────── 3. 당일 출결 상태 리셋 ─────────────
     function buttonReset() {
-        const targetName = document.getElementById('update-name').value.trim();
-        const resultDiv = document.getElementById('update-result');
+        return run(async () => {
+            const target = await resolveTarget();
+            if (!target) return;
 
-        if (!targetName) {
-            alert("리셋하고 싶은 학생의 이름을 입력하세요!");
-            return;
-        }
-
-        database.ref('students').once('value').then((snapshot) => {
-            const data = snapshot.val();
-            let targetKey = null;
-            let targetData = null;
-
-            for (let id in data) {
-                if (data[id] && data[id].이름 === targetName) {
-                    targetKey = id;
-                    targetData = data[id];
-                    break;
-                }
-            }
-
-            if (!targetKey) {
-                resultDiv.innerHTML = "❌ 에러: 일치하는 학생이 명단에 없습니다.";
+            if (!confirm(`⚠️ [${target.data.이름}] 학생의 오늘 출결 데이터를 미등교 상태로 초기화하시겠습니까?`)) {
                 return;
             }
 
-            if (confirm("⚠️ 진짜 이 학생의 오늘 하루 출결 변수 데이터를 미등교 상태로 초기 정정하시겠습니까?")) {
-                database.ref('students/' + targetKey).update({
-                    "오늘상태": "❌ 미등교",
-                    "출석시간": "-",
-                    "하교_여부": "❌ 미하교",
-                    "하교_시간": "-"
-                }).then(() => {
-                    resultDiv.innerHTML = `✅ 데이터 정정 완료: [${targetData.이름}] 오늘 하루 데이터가 미등교 상태로 청소됨`;
-                });
-            }
+            await database.ref('students/' + target.id).update({
+                "오늘상태": "❌ 미등교",
+                "출석시간": "-",
+                "하교_여부": "❌ 미하교",
+                "하교_시간": "-"
+            });
+            showMessage(`✅ 데이터 정정 완료: [${esc(target.data.이름)}] 오늘 하루 데이터가 미등교 상태로 초기화됨`, 'success');
         });
     }
+
+    // ───────────── 이벤트 연결 ─────────────
+    document.getElementById('btn-search').addEventListener('click', searchStudent);
+    document.getElementById('btn-late').addEventListener('click', updateLate);
+    document.getElementById('btn-reset').addEventListener('click', buttonReset);
+
+    // 입력창에서 Enter를 누르면 조회
+    [nameInput, idInput].forEach((el) => {
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchStudent(); });
+    });
     </script>
 
 </body>
