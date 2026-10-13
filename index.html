@@ -905,23 +905,32 @@
     }
 
     // ───────────── 5-2. 학생 삭제 ─────────────
-    // 카드·지문이 등록된 학생은 지문 센서에서도 지워야 하므로 장비 연결이 필요합니다.
+    // 장비가 연결되어 있으면 지문 센서의 지문도 함께 지우고,
+    // 연결이 안 되어 있으면 확인을 받은 뒤 DB에서만 삭제합니다(센서의 지문은 남음).
     function deleteStudent(target) {
         const s = target.data;
         const hasHw = s.finger_id !== undefined && s.finger_id !== null && s.finger_id !== '';
 
         run(async () => {
-            if (hasHw && !(await ensureHardware())) return;
+            let viaHardware = false;
+            if (hasHw) {
+                const g = await getGatewayState();
+                renderGatewayPill();
+                viaHardware = g.arduino;
+            }
 
             const ok = confirm(
                 `🗑️ [${s.이름}] 학생(번호 ${target.id})을 삭제합니다.\n\n` +
                 `• 출결 기록과 코멘트가 모두 사라지며 되돌릴 수 없습니다.\n` +
-                (hasHw ? `• 지문 센서에 저장된 지문도 함께 삭제됩니다.\n` : '') +
+                (viaHardware ? `• 지문 센서에 저장된 지문도 함께 삭제됩니다.\n` : '') +
+                (hasHw && !viaHardware
+                    ? `• 장비가 연결되어 있지 않아 DB에서만 삭제됩니다.\n  (지문 센서 ${s.finger_id}번 칸의 지문은 남지만, DB에 없으면 출석 인증은 되지 않습니다.)\n`
+                    : '') +
                 `\n정말 삭제하시겠습니까?`
             );
             if (!ok) return;
 
-            if (hasHw) {
+            if (viaHardware) {
                 showMessage('⏳ 지문 센서에서 지문을 삭제하는 중입니다…', 'warn');
                 const res = await sendCommand(2, target.id);
                 if (!res.ok) { showMessage('❌ ' + esc(res.message), 'error'); return; }
