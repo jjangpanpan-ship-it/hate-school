@@ -76,13 +76,14 @@
         label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
         .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
         .field { margin-bottom: 16px; }
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], input[type="date"], textarea, select {
             width: 100%; padding: 12px 14px; font-size: 15px; font-family: inherit;
             color: var(--text); border: 1.5px solid var(--line); border-radius: 12px;
             background: #fafbfe; outline: none;
             transition: border-color .15s, box-shadow .15s, background .15s;
         }
-        input:focus, select:focus {
+        textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+        input:focus, select:focus, textarea:focus {
             border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-soft);
         }
         input[readonly] { background: var(--bg); color: var(--muted); }
@@ -150,7 +151,29 @@
         .pill.off { background: var(--danger-soft); color: var(--danger); }
         .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 3px; }
 
-        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+        .action-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 16px; }
+
+        /* ───── 장비 연결 상태 ───── */
+        .gw { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+              padding: 6px 12px; border-radius: 999px; background: var(--bg); color: var(--muted); }
+        .gw .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+        .gw.ok { background: var(--success-soft); color: var(--success); }
+        .gw.ok .dot { background: var(--success); }
+        .gw.partial { background: var(--warn-soft); color: var(--warn); }
+        .gw.partial .dot { background: var(--warn); }
+        .gw.off { background: var(--danger-soft); color: var(--danger); }
+        .gw.off .dot { background: var(--danger); }
+
+        /* ───── 코멘트 ───── */
+        .pill.warn { background: var(--warn-soft); color: var(--warn); }
+        .comment { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; font-size: 14px; }
+        .comment-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .comment-text { line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+        .link-btn { background: none; color: var(--danger); padding: 4px 8px; font-size: 12px; border-radius: 8px; }
+        .link-btn:hover:not(:disabled) { background: var(--danger-soft); }
+        .comment-form { background: var(--bg); border-radius: 14px; padding: 14px; margin-top: 10px; }
+        .comment-form .form-grid { margin-bottom: 0; }
+        .comment-form .field { margin-bottom: 12px; }
 
         /* ───── 수정 폼 ───── */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
@@ -185,7 +208,7 @@
                 <div class="brand-logo">🎓</div>
                 학생 관리 시스템
             </div>
-            <span class="nav-tag">출결 관리</span>
+            <span class="gw" id="gw-status"><span class="dot"></span><span id="gw-text">장비 상태 확인 중…</span></span>
         </div>
     </nav>
 
@@ -234,8 +257,8 @@
                 <div class="field">
                     <label class="check">
                         <input type="checkbox" id="add-hw" checked>
-                        <span>추가 후 바로 카드·지문 등록 시작<br>
-                        <span class="hint">파이썬 게이트웨이가 켜져 있어야 하며, 아두이노 LCD 안내에 따라 카드와 지문을 등록합니다.</span></span>
+                        <span>카드·지문 바로 등록<br>
+                        <span class="hint">컴퓨터가 아두이노·파이썬과 연결되어 있어야 하며, 장비 등록에 성공해야 학생이 저장됩니다. 체크를 끄면 이름만 먼저 저장됩니다.</span></span>
                     </label>
                 </div>
 
@@ -310,6 +333,87 @@
         }
     }
 
+    // ───────────── 장비(파이썬·아두이노) 연결 확인 ─────────────
+    // 파이썬이 3초마다 system/gateway 에 {ts, arduino} 를 기록합니다. ts 가 오래되면 파이썬이 꺼진 것으로 봅니다.
+    const GW_STALE_MS = 10000;
+    let serverOffset = 0;
+    let lastGateway = null;
+    database.ref('.info/serverTimeOffset').on('value', (snap) => { serverOffset = snap.val() || 0; });
+
+    function gatewayStateFrom(g) {
+        if (!g || !g.ts) return { python: false, arduino: false };
+        const python = (Date.now() + serverOffset - g.ts) < GW_STALE_MS;
+        return { python, arduino: python && !!g.arduino };
+    }
+
+    async function getGatewayState() {
+        const snap = await database.ref('system/gateway').once('value');
+        lastGateway = snap.val();
+        return gatewayStateFrom(lastGateway);
+    }
+
+    function renderGatewayPill() {
+        const st = gatewayStateFrom(lastGateway);
+        const el = document.getElementById('gw-status');
+        const text = document.getElementById('gw-text');
+        el.className = 'gw ' + (st.arduino ? 'ok' : st.python ? 'partial' : 'off');
+        text.textContent = st.arduino ? '장비 연결됨' : st.python ? '아두이노 연결 안 됨' : '파이썬 연결 안 됨';
+    }
+    database.ref('system/gateway').on('value', (snap) => { lastGateway = snap.val(); renderGatewayPill(); });
+    setInterval(renderGatewayPill, 2000);
+
+    function warn(msg) {
+        alert(msg);
+        showMessage('❌ ' + esc(msg), 'error');
+    }
+
+    // 장비가 필요한 작업 전에 호출. 연결이 안 되어 있으면 안내하고 false 를 반환 (DB는 건드리지 않음)
+    async function ensureHardware() {
+        const g = await getGatewayState();
+        renderGatewayPill();
+        if (!g.python) {
+            warn('파이썬 게이트웨이와 연결되어 있지 않습니다.\n컴퓨터에서 gateway.py 가 실행 중인지 확인하세요.');
+            return false;
+        }
+        if (!g.arduino) {
+            warn('컴퓨터가 아두이노와 연결되어 있지 않습니다.\nUSB 연결과 COM 포트를 확인하세요.');
+            return false;
+        }
+        return true;
+    }
+
+    // 파이썬에 명령을 보내고 결과(system/result)를 기다림. op: 1=재등록, 2=삭제, 3=새 학생+등록
+    function waitForResult(req, timeoutMs) {
+        return new Promise((resolve) => {
+            const ref = database.ref('system/result');
+            let timer = null;
+            const handler = ref.on('value', (snap) => {
+                const v = snap.val();
+                if (v && String(v.req) === req) {
+                    clearTimeout(timer);
+                    ref.off('value', handler);
+                    resolve(v);
+                }
+            });
+            timer = setTimeout(() => {
+                ref.off('value', handler);
+                resolve({ ok: false, message: '응답 시간이 초과되었습니다. 파이썬 창의 로그를 확인하세요.' });
+            }, timeoutMs);
+        });
+    }
+
+    async function sendCommand(op, id, name) {
+        const req = String(Date.now());
+        const waiter = waitForResult(req, 100000);
+        await database.ref('system/command').set(`${op}:${id}:${req}` + (name !== undefined ? ':' + name : ''));
+        return waiter;
+    }
+
+    async function refreshStudent(id) {
+        const snap = await database.ref('students/' + id).once('value');
+        return snap.exists() ? { id, data: snap.val() } : null;
+    }
+
     // ───────────── 학생 찾기 ─────────────
     async function findStudents(name, id) {
         if (id) {
@@ -369,6 +473,8 @@
         if (act.dataset.action === 'edit') renderEditForm(currentTarget);
         if (act.dataset.action === 'cancel-edit') renderStudent(currentTarget);
         if (act.dataset.action === 'hw-reg') startHardwareRegistration(currentTarget);
+        if (act.dataset.action === 'delete') deleteStudent(currentTarget);
+        if (act.dataset.action === 'del-comment') deleteComment(act.dataset.key);
     });
 
     // ───────────── 조회 결과 카드 ─────────────
@@ -424,9 +530,100 @@
             <div class="action-row">
                 <button type="button" class="btn-outline" data-action="edit">✏️ 정보 수정</button>
                 <button type="button" class="btn-gray" data-action="hw-reg">${hwDone ? '🔁 카드·지문 재등록' : '🪪 카드·지문 등록'}</button>
+                <button type="button" class="btn-danger" data-action="delete">🗑️ 학생 삭제</button>
             </div>
+
+            ${commentsHtml(target)}
         `;
     }
+
+    // ───────────── 지각·결석 코멘트 ─────────────
+    function todayStr() {
+        const d = new Date();
+        const p = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+
+    function commentsHtml(target) {
+        const s = target.data;
+        const list = Object.entries(s.코멘트 || {})
+            .map(([key, v]) => ({ key, ...v }))
+            .sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.ts || 0) - (a.ts || 0));
+
+        const status = String(s.오늘상태 || '');
+        const defType = status.includes('지각') ? '지각' : (status.includes('미') ? '결석' : '지각');
+
+        const items = list.length ? list.map((c) => `
+            <div class="comment">
+                <div class="comment-head">
+                    <span><span class="pill ${c.type === '결석' ? 'off' : 'warn'}">${esc(c.type)}</span> <b>${esc(c.date)}</b></span>
+                    <button type="button" class="link-btn" data-action="del-comment" data-key="${esc(c.key)}">삭제</button>
+                </div>
+                <div class="comment-text">${esc(c.text)}</div>
+            </div>`).join('')
+            : '<p class="note" style="margin:0 0 8px">등록된 코멘트가 없습니다.</p>';
+
+        return `
+            <p class="today-title" style="margin-top:22px">지각·결석 코멘트 (${list.length})</p>
+            ${items}
+            <form class="comment-form" id="comment-form" novalidate>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="c-date">날짜</label>
+                        <input type="date" id="c-date" value="${todayStr()}">
+                    </div>
+                    <div class="field">
+                        <label for="c-type">구분</label>
+                        <select id="c-type">
+                            <option value="지각" ${defType === '지각' ? 'selected' : ''}>지각</option>
+                            <option value="결석" ${defType === '결석' ? 'selected' : ''}>결석</option>
+                        </select>
+                    </div>
+                    <div class="field full">
+                        <label for="c-text">코멘트</label>
+                        <textarea id="c-text" maxlength="300" placeholder="예) 병원 진료로 지각 (학부모 연락 완료)"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn-outline" style="width:100%">코멘트 추가</button>
+            </form>
+        `;
+    }
+
+    function addComment() {
+        const target = currentTarget;
+        if (!target) return;
+        const date = document.getElementById('c-date').value;
+        const type = document.getElementById('c-type').value;
+        const text = document.getElementById('c-text').value.trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('날짜를 선택하세요.'); return; }
+        if (!text) { alert('코멘트 내용을 입력하세요.'); return; }
+
+        run(async () => {
+            await database.ref('students/' + target.id + '/코멘트').push({
+                date, type, text, ts: firebase.database.ServerValue.TIMESTAMP
+            });
+            const fresh = await refreshStudent(target.id);
+            if (fresh) renderStudent(fresh);
+        });
+    }
+
+    function deleteComment(key) {
+        const target = currentTarget;
+        if (!target || !key) return;
+        if (!confirm('이 코멘트를 삭제하시겠습니까?')) return;
+        run(async () => {
+            await database.ref('students/' + target.id + '/코멘트/' + key).remove();
+            const fresh = await refreshStudent(target.id);
+            if (fresh) renderStudent(fresh);
+        });
+    }
+
+    resultDiv.addEventListener('submit', (e) => {
+        if (e.target.id === 'comment-form') {
+            e.preventDefault();
+            addComment();
+        }
+    });
 
     // ───────────── 1. 학생 조회 ─────────────
     function searchStudent() {
@@ -684,26 +881,58 @@
 
     // ───────────── 5. 카드·지문 (재)등록 명령 전송 ─────────────
     // 파이썬이 system/command 를 감시하다가 "1:학생번호" 를 받으면 아두이노에 REG 명령을 보냅니다.
-    async function sendRegisterCommand(id) {
-        await database.ref('system/command').set('1:' + id);
+    // 장비가 연결되어 있지 않으면 시작하지 않으며, 등록이 끝날 때까지 결과를 기다립니다.
+    function startHardwareRegistration(target) {
+        run(async () => {
+            if (!(await ensureHardware())) return;
+
+            const ok = confirm(
+                `[${target.data.이름}] 학생(번호 ${target.id})의 카드·지문 등록을 시작합니다.\n\n` +
+                `• 아두이노 LCD 안내에 따라 20초 안에 카드를 태그하고 지문을 두 번 찍으세요.\n` +
+                (target.data.rfid_uid ? `• 기존 카드/지문 정보는 새로 등록한 값으로 덮어써집니다.\n` : '') +
+                `\n진행하시겠습니까?`
+            );
+            if (!ok) return;
+
+            showMessage(`📡 아두이노 LCD의 안내에 따라 <b>${esc(target.data.이름)}</b> 학생의 카드와 지문을 등록하세요. (최대 약 1분)`, 'warn');
+            const res = await sendCommand(1, target.id);
+            if (!res.ok) { showMessage('❌ ' + esc(res.message), 'error'); return; }
+
+            const fresh = await refreshStudent(target.id);
+            if (fresh) renderStudent(fresh);
+            resultDiv.insertAdjacentHTML('afterbegin', `<div class="alert success" style="margin-bottom:16px">✅ ${esc(res.message)}</div>`);
+        });
     }
 
-    function startHardwareRegistration(target) {
-        const ok = confirm(
-            `[${target.data.이름}] 학생(번호 ${target.id})의 카드·지문 등록을 시작합니다.\n\n` +
-            `• 파이썬 게이트웨이가 켜져 있어야 합니다.\n` +
-            `• 아두이노 LCD 안내에 따라 20초 안에 카드를 태그하고 지문을 두 번 찍으세요.\n` +
-            (target.data.rfid_uid ? `• 기존 카드/지문 정보는 새로 등록한 값으로 덮어써집니다.\n` : '') +
-            `\n진행하시겠습니까?`
-        );
-        if (!ok) return;
+    // ───────────── 5-2. 학생 삭제 ─────────────
+    // 카드·지문이 등록된 학생은 지문 센서에서도 지워야 하므로 장비 연결이 필요합니다.
+    function deleteStudent(target) {
+        const s = target.data;
+        const hasHw = s.finger_id !== undefined && s.finger_id !== null && s.finger_id !== '';
+
         run(async () => {
-            await sendRegisterCommand(target.id);
-            showMessage(
-                `📡 등록 명령을 전송했습니다. 아두이노 LCD의 안내에 따라 <b>${esc(target.data.이름)}</b> 학생의 카드와 지문을 등록하세요.<br>
-                 등록이 끝나면 다시 조회해서 카드 UID와 지문 번호가 채워졌는지 확인하세요.`,
-                'success'
+            if (hasHw && !(await ensureHardware())) return;
+
+            const ok = confirm(
+                `🗑️ [${s.이름}] 학생(번호 ${target.id})을 삭제합니다.\n\n` +
+                `• 출결 기록과 코멘트가 모두 사라지며 되돌릴 수 없습니다.\n` +
+                (hasHw ? `• 지문 센서에 저장된 지문도 함께 삭제됩니다.\n` : '') +
+                `\n정말 삭제하시겠습니까?`
             );
+            if (!ok) return;
+
+            if (hasHw) {
+                showMessage('⏳ 지문 센서에서 지문을 삭제하는 중입니다…', 'warn');
+                const res = await sendCommand(2, target.id);
+                if (!res.ok) { showMessage('❌ ' + esc(res.message), 'error'); return; }
+            } else {
+                await database.ref('students/' + target.id).remove();
+            }
+
+            currentTarget = null;
+            nameInput.value = '';
+            showMessage(`✅ [${esc(s.이름)}] 학생을 삭제했습니다.`, 'success');
+            suggestNextId();
         });
     }
 
@@ -736,6 +965,32 @@
         const id = String(parseInt(idRaw, 10));
 
         run(async () => {
+            // [카드·지문 바로 등록] 장비 연결이 안 되어 있으면 아무것도 저장하지 않고 중단
+            if (addHwCheck.checked) {
+                if (!(await ensureHardware())) return;
+
+                const exists = await database.ref('students/' + id).once('value');
+                if (exists.exists()) {
+                    showMessage(`❌ 에러: 학생 번호 ${esc(id)}번은 이미 사용 중입니다. 다른 번호를 입력하세요.`, 'error');
+                    return;
+                }
+
+                // 파이썬이 장비 등록에 성공했을 때만 학생을 DB에 만듭니다.
+                showMessage(`📡 아두이노 LCD의 안내에 따라 <b>${esc(name)}</b> 학생의 카드와 지문을 등록하세요. (최대 약 1분)<br>등록이 성공해야 학생이 저장됩니다.`, 'warn');
+                const res = await sendCommand(3, id, name);
+                if (!res.ok) {
+                    showMessage('❌ 학생이 추가되지 않았습니다. ' + esc(res.message), 'error');
+                    return;
+                }
+                const fresh = await refreshStudent(id);
+                if (fresh) renderStudent(fresh);
+                resultDiv.insertAdjacentHTML('afterbegin', `<div class="alert success" style="margin-bottom:16px">✅ 학생 추가 완료: [${esc(name)}] (학생 번호 ${esc(id)}) — 카드·지문 등록됨</div>`);
+                nameInput.value = name;
+                addNameInput.value = '';
+                await suggestNextId();
+                return;
+            }
+
             const newStudent = {
                 이름: name,
                 오늘상태: STATUS_NONE,
@@ -758,15 +1013,7 @@
                 return;
             }
 
-            let hwMsg = '';
-            if (addHwCheck.checked) {
-                await sendRegisterCommand(id);
-                hwMsg = `<br>📡 카드·지문 등록 명령을 전송했습니다. 아두이노 LCD 안내에 따라 20초 안에 카드를 태그하고 지문을 두 번 등록하세요.`;
-            } else {
-                hwMsg = `<br>카드·지문은 아직 미등록 상태입니다. 조회 화면의 “카드·지문 등록” 버튼으로 나중에 등록할 수 있습니다.`;
-            }
-
-            showMessage(`✅ 학생 추가 완료: [${esc(name)}] (학생 번호 ${esc(id)})${hwMsg}`, 'success');
+            showMessage(`✅ 학생 추가 완료: [${esc(name)}] (학생 번호 ${esc(id)})<br>카드·지문은 아직 미등록 상태입니다. 조회 화면의 “카드·지문 등록” 버튼으로 나중에 등록할 수 있습니다.`, 'success');
             addNameInput.value = '';
             await suggestNextId();
         });
