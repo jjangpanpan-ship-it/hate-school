@@ -40,267 +40,141 @@
         }
 
         /* ───── 상단 네비게이션 ───── */
-        .navbar {
-            background: var(--card);
-            border-bottom: 1px solid var(--line);
-        }
+        .navbar { background: var(--card); border-bottom: 1px solid var(--line); }
         .navbar-inner {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 960px; margin: 0 auto; padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 18px;
-            letter-spacing: -0.3px;
-        }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -0.3px; }
         .brand-logo {
-            width: 34px; height: 34px;
-            border-radius: 10px;
+            width: 34px; height: 34px; border-radius: 10px;
             background: linear-gradient(135deg, var(--primary), #8a5cf6);
-            color: #fff;
-            display: grid; place-items: center;
-            font-size: 18px;
+            color: #fff; display: grid; place-items: center; font-size: 18px;
         }
-        .nav-tag {
-            font-size: 13px;
-            color: var(--muted);
-            background: var(--bg);
-            padding: 6px 12px;
-            border-radius: 999px;
-        }
+        .nav-tag { font-size: 13px; color: var(--muted); background: var(--bg); padding: 6px 12px; border-radius: 999px; }
 
         /* ───── 히어로 ───── */
         .hero {
             background: linear-gradient(135deg, #4f6ef7 0%, #7a5cf6 100%);
-            color: #fff;
-            padding: 48px 20px 90px;
-            text-align: center;
+            color: #fff; padding: 48px 20px 90px; text-align: center;
         }
-        .hero h1 {
-            margin: 0 0 10px;
-            font-size: clamp(26px, 5vw, 36px);
-            letter-spacing: -0.8px;
-        }
-        .hero p {
-            margin: 0;
-            opacity: .85;
-            font-size: 15px;
-        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(26px, 5vw, 36px); letter-spacing: -0.8px; }
+        .hero p { margin: 0; opacity: .85; font-size: 15px; }
 
         /* ───── 메인 레이아웃 ───── */
         .container {
-            max-width: 960px;
-            margin: -56px auto 40px;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 340px 1fr;
-            gap: 20px;
-            align-items: start;
+            max-width: 960px; margin: -56px auto 40px; padding: 0 20px;
+            display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start;
         }
-        @media (max-width: 800px) {
-            .container { grid-template-columns: 1fr; }
-        }
+        .left-col { display: grid; gap: 20px; }
+        @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
 
-        .card {
-            background: var(--card);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            padding: 24px;
-        }
-        .card h2 {
-            margin: 0 0 18px;
-            font-size: 17px;
-            letter-spacing: -0.3px;
-        }
+        .card { background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 24px; }
+        .card h2 { margin: 0 0 18px; font-size: 17px; letter-spacing: -0.3px; }
 
         /* ───── 폼 ───── */
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .hint {
-            font-weight: 400;
-            color: var(--muted);
-            font-size: 12px;
-        }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
         .field { margin-bottom: 16px; }
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 14px;
-            font-size: 15px;
-            font-family: inherit;
-            color: var(--text);
-            border: 1.5px solid var(--line);
-            border-radius: 12px;
-            background: #fafbfe;
-            outline: none;
+        input[type="text"], input[type="number"], select {
+            width: 100%; padding: 12px 14px; font-size: 15px; font-family: inherit;
+            color: var(--text); border: 1.5px solid var(--line); border-radius: 12px;
+            background: #fafbfe; outline: none;
             transition: border-color .15s, box-shadow .15s, background .15s;
         }
-        input[type="text"]:focus {
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px var(--primary-soft);
+        input:focus, select:focus {
+            border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-soft);
         }
+        input[readonly] { background: var(--bg); color: var(--muted); }
+        .check { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; line-height: 1.5; cursor: pointer; }
+        .check input { margin-top: 3px; }
 
         button {
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 14px;
-            cursor: pointer;
+            font-family: inherit; font-size: 14px; font-weight: 600; border: none;
+            border-radius: 12px; padding: 12px 14px; cursor: pointer;
             transition: transform .1s, background .15s, box-shadow .15s, opacity .15s;
         }
         button:active:not(:disabled) { transform: translateY(1px); }
         button:disabled { opacity: .5; cursor: not-allowed; }
 
         .btn-primary {
-            width: 100%;
-            background: var(--primary);
-            color: #fff;
-            font-size: 15px;
-            padding: 14px;
+            width: 100%; background: var(--primary); color: #fff; font-size: 15px; padding: 14px;
             box-shadow: 0 6px 16px rgba(79, 110, 247, .3);
         }
         .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
-
-        .btn-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .btn-outline {
-            background: var(--primary-soft);
-            color: var(--primary-dark);
-        }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn-outline { background: var(--primary-soft); color: var(--primary-dark); }
         .btn-outline:hover:not(:disabled) { background: #e1e7ff; }
-        .btn-danger {
-            background: var(--danger-soft);
-            color: var(--danger);
-        }
+        .btn-danger { background: var(--danger-soft); color: var(--danger); }
         .btn-danger:hover:not(:disabled) { background: #fbdada; }
+        .btn-gray { background: var(--bg); color: var(--text); }
+        .btn-gray:hover:not(:disabled) { background: #e9edf5; }
 
         /* ───── 결과 영역 ───── */
-        .placeholder {
-            text-align: center;
-            padding: 56px 16px;
-            color: var(--muted);
-        }
+        .placeholder { text-align: center; padding: 56px 16px; color: var(--muted); }
         .placeholder .big { font-size: 44px; margin-bottom: 10px; }
         .placeholder p { margin: 0; line-height: 1.6; font-size: 14px; }
 
-        .profile {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
+        .profile { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
         .avatar {
-            width: 52px; height: 52px;
-            border-radius: 16px;
+            width: 52px; height: 52px; border-radius: 16px;
             background: linear-gradient(135deg, var(--primary), #8a5cf6);
-            color: #fff;
-            font-size: 22px;
-            font-weight: 800;
-            display: grid; place-items: center;
-            flex-shrink: 0;
+            color: #fff; font-size: 22px; font-weight: 800;
+            display: grid; place-items: center; flex-shrink: 0;
         }
         .profile-name { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
         .badge {
-            display: inline-block;
-            margin-top: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--primary-dark);
-            background: var(--primary-soft);
-            padding: 3px 10px;
-            border-radius: 999px;
+            display: inline-block; margin: 4px 4px 0 0; font-size: 12px; font-weight: 600;
+            color: var(--primary-dark); background: var(--primary-soft); padding: 3px 10px; border-radius: 999px;
         }
+        .badge.gray { color: var(--muted); background: var(--bg); }
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-        .stat {
-            background: var(--bg);
-            border-radius: 14px;
-            padding: 16px 12px;
-            text-align: center;
-        }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+        .stat { background: var(--bg); border-radius: 14px; padding: 16px 12px; text-align: center; }
         .stat .num { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
         .stat .num small { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 2px; }
         .stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
         .today-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 0 10px; }
         .today-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 16px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+            margin-bottom: 8px; font-size: 14px;
         }
         .today-row .k { color: var(--muted); }
         .today-row .v { font-weight: 600; text-align: right; }
         .pill {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            background: var(--success-soft);
-            color: var(--success);
+            display: inline-block; padding: 3px 10px; border-radius: 999px;
+            font-size: 12px; font-weight: 700; background: var(--success-soft); color: var(--success);
         }
         .pill.off { background: var(--danger-soft); color: var(--danger); }
         .sub { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 3px; }
 
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+
+        /* ───── 수정 폼 ───── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+        .form-grid .full { grid-column: 1 / -1; }
+        .form-section { font-size: 13px; font-weight: 700; color: var(--muted); margin: 6px 0 12px; }
+        @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+
         /* ───── 알림 박스 ───── */
-        .alert {
-            padding: 16px 18px;
-            border-radius: 14px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        .alert { padding: 16px 18px; border-radius: 14px; font-size: 14px; line-height: 1.6; }
         .alert.error { background: var(--danger-soft); color: #b3262b; }
         .alert.success { background: var(--success-soft); color: #167a4c; }
         .alert.warn { background: var(--warn-soft); color: var(--warn); }
+        .note { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 10px; }
 
         .pick-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
         .pick-list button {
-            width: 100%;
-            text-align: left;
-            background: #fff;
-            color: var(--text);
-            border: 1px solid var(--line);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%; text-align: left; background: #fff; color: var(--text);
+            border: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;
         }
         .pick-list button:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
 
         .loading { opacity: .6; pointer-events: none; }
 
-        footer {
-            text-align: center;
-            color: var(--muted);
-            font-size: 12px;
-            padding-bottom: 30px;
-        }
+        footer { text-align: center; color: var(--muted); font-size: 12px; padding-bottom: 30px; }
     </style>
 </head>
 <body>
@@ -317,27 +191,58 @@
 
     <header class="hero">
         <h1>학생 출결 관리</h1>
-        <p>이름으로 학생을 조회하고 지각 횟수와 오늘의 출결 상태를 관리하세요.</p>
+        <p>학생을 추가하고, 이름으로 조회해 출결 정보를 자유롭게 수정하세요.</p>
     </header>
 
     <main class="container">
 
-        <!-- 왼쪽: 입력/버튼 -->
-        <section class="card">
-            <h2>학생 검색</h2>
+        <div class="left-col">
+            <!-- 학생 검색 -->
+            <section class="card">
+                <h2>학생 검색</h2>
 
-            <div class="field">
-                <label for="update-name">학생 이름</label>
-                <input type="text" id="update-name" placeholder="예) 홍길동" autocomplete="off">
-            </div>
+                <div class="field">
+                    <label for="update-name">학생 이름</label>
+                    <input type="text" id="update-name" placeholder="예) 홍길동" autocomplete="off">
+                </div>
 
-            <button class="btn-primary" id="btn-search">학생 조회</button>
+                <button class="btn-primary" id="btn-search">학생 조회</button>
 
-            <div class="btn-row">
-                <button class="btn-outline" id="btn-late">지각 변수 정정</button>
-                <button class="btn-danger" id="btn-reset">당일 출결 리셋</button>
-            </div>
-        </section>
+                <div class="btn-row">
+                    <button class="btn-outline" id="btn-edit">정보 수정</button>
+                    <button class="btn-outline" id="btn-late">지각 변수 정정</button>
+                </div>
+                <div class="btn-row" style="grid-template-columns: 1fr;">
+                    <button class="btn-danger" id="btn-reset">당일 출결 리셋</button>
+                </div>
+            </section>
+
+            <!-- 새 학생 추가 -->
+            <section class="card">
+                <h2>새 학생 추가</h2>
+
+                <div class="field">
+                    <label for="add-name">이름</label>
+                    <input type="text" id="add-name" placeholder="예) 김민수" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="add-id">학생 번호 <span class="hint">(= 지문 저장 번호)</span></label>
+                    <input type="number" id="add-id" min="1" step="1" placeholder="자동 추천">
+                </div>
+
+                <div class="field">
+                    <label class="check">
+                        <input type="checkbox" id="add-hw" checked>
+                        <span>추가 후 바로 카드·지문 등록 시작<br>
+                        <span class="hint">파이썬 게이트웨이가 켜져 있어야 하며, 아두이노 LCD 안내에 따라 카드와 지문을 등록합니다.</span></span>
+                    </label>
+                </div>
+
+                <button class="btn-primary" id="btn-add">학생 추가</button>
+                <p class="note">학생 번호는 지문 센서의 저장 칸 번호로 쓰이므로 센서 저장 용량 이내의 숫자여야 합니다.</p>
+            </section>
+        </div>
 
         <!-- 오른쪽: 결과 -->
         <section class="card" id="result-card">
@@ -355,40 +260,44 @@
     <footer>© 학생 관리 시스템</footer>
 
     <script>
-    // ───────────── Firebase 연결 (기존 설정 그대로) ─────────────
+    // ───────────── Firebase 연결 ─────────────
     const firebaseConfig = {
         databaseURL: "https://school-system-c8892-default-rtdb.firebaseio.com/"
     };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // 파이썬(DB)과 같은 문구를 써야 하므로 python 파일의 STATUS_* 값과 동일하게 유지하세요.
+    const STATUS_NONE = "❌ 미등교";
+    const STATUS_ARRIVED = "✅ 등교";
+    const STATUS_LATE = "⚠️ 지각";
+    const STATUS_LEAVE_NONE = "❌ 미하교";
+    const STATUS_LEFT = "✅ 하교";
+
     // ───────────── 공통 유틸 ─────────────
     const nameInput = document.getElementById('update-name');
-    let selectedId = null;   // 동명이인 중 목록에서 고른 학생의 지문 번호 (DB 키, 1회용)
+    let selectedId = null;   // 동명이인 중 목록에서 고른 학생의 DB 키 (1회용)
     let lastAction = null;   // 마지막으로 누른 버튼 동작 (학생을 고른 뒤 이어서 실행)
+    let currentTarget = null; // 지금 결과 화면에 표시 중인 학생 {id, data}
     const resultDiv = document.getElementById('update-result');
     const resultCard = document.getElementById('result-card');
-    const buttons = document.querySelectorAll('button');
 
-    // DB에서 가져온 값을 innerHTML에 넣어도 안전하도록 특수문자 이스케이프
     function esc(value) {
         return String(value ?? '').replace(/[&<>"']/g, (c) => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
     }
 
-    // 알림 박스 표시 (type: error | success | warn)
     function showMessage(html, type) {
         resultDiv.innerHTML = `<div class="alert ${type || ''}">${html}</div>`;
     }
 
     // 작업 중 버튼 잠금 (연타로 인한 중복 실행 방지)
     function setBusy(busy) {
-        buttons.forEach((b) => { b.disabled = busy; });
+        document.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
         resultCard.classList.toggle('loading', busy);
     }
 
-    // 모든 버튼 동작을 감싸서 에러 처리와 버튼 잠금을 한 곳에서 처리
     async function run(task) {
         setBusy(true);
         try {
@@ -401,27 +310,23 @@
         }
     }
 
-    // ───────────── 학생 찾기 (세 기능이 함께 사용) ─────────────
-    // 이름(+선택적으로 지문 번호)으로 일치하는 학생 목록을 반환
+    // ───────────── 학생 찾기 ─────────────
     async function findStudents(name, id) {
         if (id) {
-            // 지문 번호가 있으면 해당 방만 직접 읽음
             const snap = await database.ref('students/' + id).once('value');
             const data = snap.val();
             return (data && data.이름 === name) ? [{ id, data }] : [];
         }
-        // 이름으로 서버에서 바로 검색 (전체 다운로드 방지)
         const snap = await database.ref('students').orderByChild('이름').equalTo(name).once('value');
         const list = [];
         snap.forEach((child) => { list.push({ id: child.key, data: child.val() }); });
         return list;
     }
 
-    // 입력값을 검증하고 대상 학생 1명을 확정해서 반환. 실패하면 null
     async function resolveTarget() {
         const name = nameInput.value.trim();
         const id = selectedId;
-        selectedId = null; // 한 번 쓰면 비움
+        selectedId = null;
 
         if (!name) {
             alert("학생의 이름을 입력하세요!");
@@ -438,7 +343,7 @@
         if (matches.length > 1) {
             const items = matches.map((m) =>
                 `<li><button type="button" data-pick="${esc(m.id)}">
-                    <span>${esc(m.data.이름)}</span><span>지문 번호: ${esc(m.data.finger_id ?? '-')}</span>
+                    <span>${esc(m.data.이름)}</span><span>학생 번호: ${esc(m.id)}</span>
                 </button></li>`
             ).join('');
             showMessage(
@@ -451,26 +356,37 @@
         return matches[0];
     }
 
-    // 동명이인 목록에서 학생을 클릭하면, 방금 누른 버튼 동작을 그 학생에게 이어서 실행
+    // 결과 영역 안의 모든 클릭(동명이인 선택, 수정/재등록/취소 버튼)을 한 곳에서 처리
     resultDiv.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-pick]');
-        if (!btn) return;
-        selectedId = btn.dataset.pick;
-        (lastAction || searchStudent)();
+        const pick = e.target.closest('[data-pick]');
+        if (pick) {
+            selectedId = pick.dataset.pick;
+            (lastAction || searchStudent)();
+            return;
+        }
+        const act = e.target.closest('[data-action]');
+        if (!act || !currentTarget) return;
+        if (act.dataset.action === 'edit') renderEditForm(currentTarget);
+        if (act.dataset.action === 'cancel-edit') renderStudent(currentTarget);
+        if (act.dataset.action === 'hw-reg') startHardwareRegistration(currentTarget);
     });
 
-    // ───────────── 조회 결과 카드 그리기 ─────────────
+    // ───────────── 조회 결과 카드 ─────────────
     function renderStudent(target) {
+        currentTarget = target;
         const s = target.data;
         const attended = !String(s.오늘상태 || '').includes('미');
         const leftSchool = !String(s.하교_여부 || '').includes('미') && s.하교_여부;
+        const hwDone = s.rfid_uid && s.finger_id;
 
         resultDiv.innerHTML = `
             <div class="profile">
                 <div class="avatar">${esc(String(s.이름).charAt(0))}</div>
                 <div>
                     <div class="profile-name">${esc(s.이름)}</div>
-                    <span class="badge">지문 번호: ${esc(s.finger_id ?? '-')}</span>
+                    <span class="badge">학생 번호: ${esc(target.id)}</span>
+                    <span class="badge">지문 번호: ${esc(s.finger_id ?? '미등록')}</span>
+                    <span class="badge gray">카드: ${esc(s.rfid_uid || '미등록')}</span>
                 </div>
             </div>
 
@@ -504,6 +420,11 @@
                     <span class="sub">시간: ${esc(s.하교_시간 || '-')}</span>
                 </span>
             </div>
+
+            <div class="action-row">
+                <button type="button" class="btn-outline" data-action="edit">✏️ 정보 수정</button>
+                <button type="button" class="btn-gray" data-action="hw-reg">${hwDone ? '🔁 카드·지문 재등록' : '🪪 카드·지문 등록'}</button>
+            </div>
         `;
     }
 
@@ -528,10 +449,9 @@
                 `🔢 [${target.data.이름}] 학생의 누적 지각 횟수를 숫자로 입력하세요:`,
                 target.data.지각_변수 || 0
             );
-            if (input === null) return; // 취소
+            if (input === null) return;
 
             const trimmed = input.trim();
-            // 0 이상의 정수만 허용 (빈 값, 문자, 음수, 소수 모두 차단)
             if (!/^\d+$/.test(trimmed)) {
                 showMessage("❌ 에러: 0 이상의 정수만 입력할 수 있습니다.", 'error');
                 return;
@@ -544,8 +464,6 @@
     }
 
     // ───────────── 3. 당일 출결 상태 리셋 ─────────────
-    // 오늘 기록을 지울 때 누적값에서 되돌려야 할 항목을 판별
-    // (출석 처리된 날 → 출석 -1 / 지각 처리된 날 → 지각 -1 / 하교 처리된 날 → 하교 -1)
     function calcRollback(s) {
         const status = String(s.오늘상태 || '');
         const leave = String(s.하교_여부 || '');
@@ -555,7 +473,7 @@
             left: leave !== '' && leave !== '-' && !leave.includes('미')
         };
     }
-    const dec = (v) => Math.max(0, (Number(v) || 0) - 1); // 1 감소, 0 아래로는 내려가지 않음
+    const dec = (v) => Math.max(0, (Number(v) || 0) - 1);
 
     function buttonReset() {
         lastAction = buttonReset;
@@ -563,7 +481,6 @@
             const target = await resolveTarget();
             if (!target) return;
 
-            // 확인창에 "무엇이 바뀌는지"를 미리 보여줌
             const before = target.data;
             const plan = calcRollback(before);
             const changes = [];
@@ -578,10 +495,9 @@
             );
             if (!ok) return;
 
-            // 트랜잭션: 최신 데이터를 기준으로 오늘 기록 초기화와 누적값 되돌리기를 한 번에 처리
             const done = { attended: false, late: false, left: false };
             const result = await database.ref('students/' + target.id).transaction((s) => {
-                if (s === null) return s; // 로컬 캐시가 비어 있으면 서버 값으로 다시 실행됨
+                if (s === null) return s;
                 const rb = calcRollback(s);
                 done.attended = rb.attended; done.late = rb.late; done.left = rb.left;
 
@@ -589,9 +505,9 @@
                 if (rb.late)     s.지각_변수 = dec(s.지각_변수);
                 if (rb.left)     s.하교_횟수 = dec(s.하교_횟수);
 
-                s.오늘상태 = "❌ 미등교";
+                s.오늘상태 = STATUS_NONE;
                 s.출석시간 = "-";
-                s.하교_여부 = "❌ 미하교";
+                s.하교_여부 = STATUS_LEAVE_NONE;
                 s.하교_시간 = "-";
                 return s;
             });
@@ -613,13 +529,260 @@
         });
     }
 
+    // ───────────── 4. 학생 정보 수정 ─────────────
+    function editStudent() {
+        lastAction = editStudent;
+        return run(async () => {
+            const target = await resolveTarget();
+            if (!target) return;
+            renderEditForm(target);
+        });
+    }
+
+    function optionList(values, selected) {
+        return values.map((v) => `<option value="${esc(v)}" ${v === selected ? 'selected' : ''}>${esc(v)}</option>`).join('');
+    }
+
+    function renderEditForm(target) {
+        currentTarget = target;
+        const s = target.data;
+        const statusOptions = [STATUS_NONE, STATUS_ARRIVED, STATUS_LATE];
+        const leaveOptions = [STATUS_LEAVE_NONE, STATUS_LEFT];
+        // DB에 예전 문구가 들어 있어도 선택값이 사라지지 않도록 현재 값을 목록에 포함
+        if (s.오늘상태 && !statusOptions.includes(s.오늘상태)) statusOptions.push(s.오늘상태);
+        if (s.하교_여부 && !leaveOptions.includes(s.하교_여부)) leaveOptions.push(s.하교_여부);
+
+        resultDiv.innerHTML = `
+            <div class="profile">
+                <div class="avatar">${esc(String(s.이름).charAt(0))}</div>
+                <div>
+                    <div class="profile-name">${esc(s.이름)} 정보 수정</div>
+                    <span class="badge">학생 번호: ${esc(target.id)}</span>
+                    <span class="badge">지문 번호: ${esc(s.finger_id ?? '미등록')}</span>
+                </div>
+            </div>
+
+            <form id="edit-form" novalidate>
+                <p class="form-section">기본 정보</p>
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="e-name">이름</label>
+                        <input type="text" id="e-name" value="${esc(s.이름)}" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label for="e-id">학생 번호 <span class="hint">(변경 불가)</span></label>
+                        <input type="text" id="e-id" value="${esc(target.id)}" readonly>
+                    </div>
+                    <div class="field">
+                        <label for="e-rfid">카드 UID <span class="hint">(변경 불가)</span></label>
+                        <input type="text" id="e-rfid" value="${esc(s.rfid_uid || '미등록')}" readonly>
+                    </div>
+                </div>
+
+                <p class="form-section">누적 기록</p>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="e-total">누적 출석일수</label>
+                        <input type="number" id="e-total" min="0" step="1" value="${esc(s.총_출석_수 || 0)}">
+                    </div>
+                    <div class="field">
+                        <label for="e-late">누적 지각</label>
+                        <input type="number" id="e-late" min="0" step="1" value="${esc(s.지각_변수 || 0)}">
+                    </div>
+                    <div class="field">
+                        <label for="e-leavecnt">누적 하교</label>
+                        <input type="number" id="e-leavecnt" min="0" step="1" value="${esc(s.하교_횟수 || 0)}">
+                    </div>
+                </div>
+
+                <p class="form-section">오늘 현황</p>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="e-status">출석 상태</label>
+                        <select id="e-status">${optionList(statusOptions, s.오늘상태 || STATUS_NONE)}</select>
+                    </div>
+                    <div class="field">
+                        <label for="e-arrive">출석 시간 <span class="hint">HH:MM:SS 또는 -</span></label>
+                        <input type="text" id="e-arrive" value="${esc(s.출석시간 || '-')}" placeholder="08:30:00" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label for="e-leavestatus">하교 여부</label>
+                        <select id="e-leavestatus">${optionList(leaveOptions, s.하교_여부 || STATUS_LEAVE_NONE)}</select>
+                    </div>
+                    <div class="field">
+                        <label for="e-leave">하교 시간 <span class="hint">HH:MM:SS 또는 -</span></label>
+                        <input type="text" id="e-leave" value="${esc(s.하교_시간 || '-')}" placeholder="15:30:00" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button type="submit" class="btn-primary" style="box-shadow:none">저장</button>
+                    <button type="button" class="btn-gray" data-action="cancel-edit">취소</button>
+                </div>
+                <p class="note">누적 기록과 오늘 현황은 서로 자동 연동되지 않으니 직접 맞춰 주세요. 출석/하교 시간이 “-”이면 장비는 아직 등교/하교하지 않은 것으로 판단합니다.</p>
+            </form>
+        `;
+
+        document.getElementById('edit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveEdit(target);
+        });
+    }
+
+    const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+
+    function saveEdit(target) {
+        const val = (id) => document.getElementById(id).value.trim();
+        const name = val('e-name');
+        const status = val('e-status');
+        const leaveStatus = val('e-leavestatus');
+        let arrive = val('e-arrive') || '-';
+        let leave = val('e-leave') || '-';
+        const counts = { total: val('e-total'), late: val('e-late'), leavecnt: val('e-leavecnt') };
+
+        const fail = (msg) => { alert(msg); return; };
+
+        if (!name) return fail('이름을 입력하세요.');
+        for (const [key, label] of [['total', '누적 출석일수'], ['late', '누적 지각'], ['leavecnt', '누적 하교']]) {
+            if (!/^\d+$/.test(counts[key])) return fail(`${label}은(는) 0 이상의 정수여야 합니다.`);
+        }
+        if (arrive !== '-' && !TIME_RE.test(arrive)) return fail('출석 시간은 HH:MM:SS 형식(예: 08:30:00) 또는 - 로 입력하세요.');
+        if (leave !== '-' && !TIME_RE.test(leave)) return fail('하교 시간은 HH:MM:SS 형식(예: 15:30:00) 또는 - 로 입력하세요.');
+
+        const isArrived = !status.includes('미');
+        const isLeft = !leaveStatus.includes('미');
+
+        // 미등교/미하교면 시간은 "-" 로 맞추고, 등교/하교 상태인데 시간이 없으면 막음
+        if (!isArrived) arrive = '-';
+        else if (arrive === '-') return fail('등교/지각 상태에서는 출석 시간을 입력해야 합니다.');
+        if (!isLeft) leave = '-';
+        else if (leave === '-') return fail('하교 상태에서는 하교 시간을 입력해야 합니다.');
+        if (isLeft && !isArrived) return fail('미등교 상태에서는 하교 처리할 수 없습니다.');
+
+        const updates = {
+            이름: name,
+            총_출석_수: parseInt(counts.total, 10),
+            지각_변수: parseInt(counts.late, 10),
+            하교_횟수: parseInt(counts.leavecnt, 10),
+            오늘상태: status,
+            출석시간: arrive,
+            하교_여부: leaveStatus,
+            하교_시간: leave
+        };
+
+        run(async () => {
+            const ref = database.ref('students/' + target.id);
+            await ref.update(updates);
+            const snap = await ref.once('value');
+            const fresh = { id: target.id, data: snap.val() };
+            nameInput.value = fresh.data.이름;
+            renderStudent(fresh);
+            resultDiv.insertAdjacentHTML('afterbegin',
+                `<div class="alert success" style="margin-bottom:16px">✅ [${esc(fresh.data.이름)}] 학생 정보가 저장되었습니다.</div>`);
+        });
+    }
+
+    // ───────────── 5. 카드·지문 (재)등록 명령 전송 ─────────────
+    // 파이썬이 system/command 를 감시하다가 "1:학생번호" 를 받으면 아두이노에 REG 명령을 보냅니다.
+    async function sendRegisterCommand(id) {
+        await database.ref('system/command').set('1:' + id);
+    }
+
+    function startHardwareRegistration(target) {
+        const ok = confirm(
+            `[${target.data.이름}] 학생(번호 ${target.id})의 카드·지문 등록을 시작합니다.\n\n` +
+            `• 파이썬 게이트웨이가 켜져 있어야 합니다.\n` +
+            `• 아두이노 LCD 안내에 따라 20초 안에 카드를 태그하고 지문을 두 번 찍으세요.\n` +
+            (target.data.rfid_uid ? `• 기존 카드/지문 정보는 새로 등록한 값으로 덮어써집니다.\n` : '') +
+            `\n진행하시겠습니까?`
+        );
+        if (!ok) return;
+        run(async () => {
+            await sendRegisterCommand(target.id);
+            showMessage(
+                `📡 등록 명령을 전송했습니다. 아두이노 LCD의 안내에 따라 <b>${esc(target.data.이름)}</b> 학생의 카드와 지문을 등록하세요.<br>
+                 등록이 끝나면 다시 조회해서 카드 UID와 지문 번호가 채워졌는지 확인하세요.`,
+                'success'
+            );
+        });
+    }
+
+    // ───────────── 6. 새 학생 추가 ─────────────
+    const addNameInput = document.getElementById('add-name');
+    const addIdInput = document.getElementById('add-id');
+    const addHwCheck = document.getElementById('add-hw');
+
+    // 비어 있는 다음 번호(가장 큰 번호 + 1)를 추천
+    async function suggestNextId() {
+        try {
+            const snap = await database.ref('students').once('value');
+            let max = 0;
+            snap.forEach((child) => {
+                const n = parseInt(child.key, 10);
+                if (!isNaN(n) && n > max) max = n;
+            });
+            addIdInput.value = max + 1;
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function addStudent() {
+        const name = addNameInput.value.trim();
+        const idRaw = addIdInput.value.trim();
+
+        if (!name) { alert('새 학생의 이름을 입력하세요!'); addNameInput.focus(); return; }
+        if (!/^[1-9]\d*$/.test(idRaw)) { alert('학생 번호는 1 이상의 정수여야 합니다.'); addIdInput.focus(); return; }
+        const id = String(parseInt(idRaw, 10));
+
+        run(async () => {
+            const newStudent = {
+                이름: name,
+                오늘상태: STATUS_NONE,
+                출석시간: "-",
+                하교_여부: STATUS_LEAVE_NONE,
+                하교_시간: "-",
+                총_출석_수: 0,
+                지각_변수: 0,
+                하교_횟수: 0
+            };
+
+            // 트랜잭션으로 "이미 있는 번호는 덮어쓰지 않기"를 보장
+            const result = await database.ref('students/' + id).transaction((current) => {
+                if (current !== null) return; // 이미 있으면 중단
+                return newStudent;
+            });
+
+            if (!result.committed) {
+                showMessage(`❌ 에러: 학생 번호 ${esc(id)}번은 이미 사용 중입니다. 다른 번호를 입력하세요.`, 'error');
+                return;
+            }
+
+            let hwMsg = '';
+            if (addHwCheck.checked) {
+                await sendRegisterCommand(id);
+                hwMsg = `<br>📡 카드·지문 등록 명령을 전송했습니다. 아두이노 LCD 안내에 따라 20초 안에 카드를 태그하고 지문을 두 번 등록하세요.`;
+            } else {
+                hwMsg = `<br>카드·지문은 아직 미등록 상태입니다. 조회 화면의 “카드·지문 등록” 버튼으로 나중에 등록할 수 있습니다.`;
+            }
+
+            showMessage(`✅ 학생 추가 완료: [${esc(name)}] (학생 번호 ${esc(id)})${hwMsg}`, 'success');
+            addNameInput.value = '';
+            await suggestNextId();
+        });
+    }
+
     // ───────────── 이벤트 연결 ─────────────
     document.getElementById('btn-search').addEventListener('click', searchStudent);
+    document.getElementById('btn-edit').addEventListener('click', editStudent);
     document.getElementById('btn-late').addEventListener('click', updateLate);
     document.getElementById('btn-reset').addEventListener('click', buttonReset);
+    document.getElementById('btn-add').addEventListener('click', addStudent);
 
-    // 입력창에서 Enter를 누르면 조회
     nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchStudent(); });
+    addNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addStudent(); });
+
+    suggestNextId();
     </script>
 
 </body>
